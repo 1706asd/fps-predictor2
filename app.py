@@ -401,10 +401,10 @@ st.markdown(
         <div class="hero-text">
             <div class="top-pill">
                 <span class="pulse-dot"></span>
-                CPU × GPU FPS ANALYZER ✨
+                FLAGSHIP CPU × GPU FPS ANALYZER ✨
             </div>
             <h1>내 PC 게임 <span class="accent">프레임(FPS)</span> 예측기</h1>
-            <p>그래픽카드(GPU)와 프로세서(CPU), 그래픽 품질 옵션을 조합해 게임별 예상 프레임과 플레이 적합도를 분석합니다.</p>
+            <p>보급형부터 최상급 플래그십 GPU · CPU, 그래픽 품질 옵션을 조합해 게임별 예상 프레임과 플레이 적합도를 분석합니다.</p>
             <div class="spec-chips">
                 <span class="spec-chip">🟢 120+ FPS 적합</span>
                 <span class="spec-chip">🟡 60+ FPS 보통</span>
@@ -420,7 +420,7 @@ st.markdown(
                     <span class="ring-sub">TARGET FPS</span>
                 </div>
             </div>
-            <div class="gauge-tag">⚡ CPU + GPU READY</div>
+            <div class="gauge-tag">⚡ HIGH-END READY</div>
         </div>
     </div>
     """,
@@ -433,11 +433,27 @@ st.markdown(
 games = ["리그 오브 레전드", "발로란트", "배틀그라운드"]
 base_fps = [260, 240, 90]  # RTX 3060 · i5-12400F · 옵션 1단계(낮음) 기준 기본 FPS
 
-gpu_list = ["RTX 3060", "RTX 4060", "RTX 4070"]
-gpu_rate = [1.0, 1.2, 1.7]  # 그래픽카드(GPU) 성능 배율
+gpu_list = [
+    "RTX 3060",
+    "RTX 4060",
+    "RTX 4070",
+    "RTX 4080 SUPER",
+    "RTX 4090",
+    "RTX 5080",
+    "RTX 5090",
+]
+gpu_rate = [1.0, 1.2, 1.7, 2.2, 2.6, 2.8, 3.4]  # 그래픽카드(GPU) 성능 배율
 
-cpu_list = ["i5-12400F", "i5-14600K", "Ryzen 7 7800X3D"]
-cpu_rate = [1.0, 1.15, 1.3]  # 프로세서(CPU) 게이밍 연산 배율
+cpu_list = [
+    "i5-12400F",
+    "i5-14600K",
+    "i7-14700K",
+    "i9-14900K",
+    "Ryzen 7 7800X3D",
+    "Ryzen 7 9800X3D",
+    "Ryzen 9 9950X3D",
+]
+cpu_rate = [1.0, 1.15, 1.23, 1.30, 1.32, 1.45, 1.48]  # 프로세서(CPU) 게이밍 연산 배율
 
 option_names = ["낮음", "보통", "높음", "매우 높음", "울트라"]
 
@@ -475,13 +491,13 @@ def predict_fps(gpu_name, cpu_name, option):
 # =============================================
 col1, col2, col3 = st.columns(3)
 with col1:
-    selected_gpu = st.selectbox("🖥️ 그래픽카드 (GPU)", gpu_list, index=1)
+    selected_gpu = st.selectbox("🖥️ 그래픽카드 (GPU)", gpu_list, index=2)
     st.caption(f"GPU 배율: {gpu_rate[gpu_list.index(selected_gpu)]}x")
 with col2:
-    selected_cpu = st.selectbox("🧠 프로세서 (CPU)", cpu_list, index=1)
+    selected_cpu = st.selectbox("🧠 프로세서 (CPU)", cpu_list, index=4)
     st.caption(f"CPU 배율: {cpu_rate[cpu_list.index(selected_cpu)]}x")
 with col3:
-    selected_option = st.slider("⚙️ 그래픽 품질 옵션", 1, 5, 2)
+    selected_option = st.slider("⚙️ 그래픽 품질 옵션", 1, 5, 3)
     st.caption(f"선택 옵션: {option_names[selected_option - 1]} ({selected_option}단계)")
 
 # =============================================
@@ -541,7 +557,7 @@ if st.button("✨ 예상 FPS 및 적합도 분석하기", type="primary", use_co
                 "예상 FPS",
                 format="%d FPS",
                 min_value=0,
-                max_value=500,
+                max_value=1400,
             ),
             "적합도": st.column_config.TextColumn("적합도 (120 / 60 FPS 기준)"),
         },
