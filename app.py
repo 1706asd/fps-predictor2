@@ -1,6 +1,6 @@
 """
 🎮 내 PC 게임 프레임(FPS) 예측기
-- 그래픽카드(GPU)와 그래픽 품질 옵션에 따른 게임별 예상 FPS 및 플레이 적합도 분석 웹앱
+- 그래픽카드(GPU), 프로세서(CPU), 그래픽 품질 옵션에 따른 게임별 예상 FPS 및 플레이 적합도 분석 웹앱
 """
 import streamlit as st
 import pandas as pd
@@ -77,7 +77,7 @@ st.markdown(
     .block-container {
         padding-top: 2rem !important;
         padding-bottom: 3.5rem !important;
-        max-width: 820px !important;
+        max-width: 850px !important;
     }
     .hero-card {
         position: relative;
@@ -276,16 +276,18 @@ st.markdown(
         .hero-card { flex-direction: column; text-align: center; }
         .spec-chips { justify-content: center; }
     }
-    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"],
+    div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
         background: rgba(255, 255, 255, 0.92) !important;
         backdrop-filter: blur(14px);
         border: 1.5px solid #E2E8F0 !important;
         border-radius: 20px !important;
-        padding: 1.1rem 1.25rem 0.85rem !important;
+        padding: 1.05rem 1.1rem 0.8rem !important;
         box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05) !important;
         transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
     }
-    div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:hover {
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:hover,
+    div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:hover {
         transform: translateY(-4px) !important;
         border-color: #6366F1 !important;
         box-shadow: 0 14px 30px rgba(99, 102, 241, 0.14) !important;
@@ -293,11 +295,12 @@ st.markdown(
     div[data-testid="stWidgetLabel"] p {
         color: #0F172A !important;
         font-weight: 800 !important;
-        font-size: 0.96rem !important;
+        font-size: 0.92rem !important;
     }
     .stCaption, .stCaption p {
         color: #4F46E5 !important;
         font-weight: 700 !important;
+        font-size: 0.8rem !important;
     }
     div[data-baseweb="select"] > div {
         background-color: #F8FAFC !important;
@@ -398,10 +401,10 @@ st.markdown(
         <div class="hero-text">
             <div class="top-pill">
                 <span class="pulse-dot"></span>
-                REAL-TIME FPS ANALYZER ✨
+                CPU × GPU FPS ANALYZER ✨
             </div>
             <h1>내 PC 게임 <span class="accent">프레임(FPS)</span> 예측기</h1>
-            <p>그래픽카드와 그래픽 품질 옵션을 선택하면 게임별 예상 프레임과 플레이 적합도를 즉시 분석합니다.</p>
+            <p>그래픽카드(GPU)와 프로세서(CPU), 그래픽 품질 옵션을 조합해 게임별 예상 프레임과 플레이 적합도를 분석합니다.</p>
             <div class="spec-chips">
                 <span class="spec-chip">🟢 120+ FPS 적합</span>
                 <span class="spec-chip">🟡 60+ FPS 보통</span>
@@ -417,7 +420,7 @@ st.markdown(
                     <span class="ring-sub">TARGET FPS</span>
                 </div>
             </div>
-            <div class="gauge-tag">⚡ BENCHMARK READY</div>
+            <div class="gauge-tag">⚡ CPU + GPU READY</div>
         </div>
     </div>
     """,
@@ -425,58 +428,67 @@ st.markdown(
 )
 
 # =============================================
-# 2. 리스트 선언: 게임 목록, 기본 FPS, GPU 배율, 옵션명
+# 2. 리스트 선언: 게임 목록, 기본 FPS, GPU/CPU 배율, 옵션명
 # =============================================
 games = ["리그 오브 레전드", "발로란트", "배틀그라운드"]
-base_fps = [260, 240, 90]  # RTX 3060 · 옵션 1단계(낮음) 기준 기본 FPS
+base_fps = [260, 240, 90]  # RTX 3060 · i5-12400F · 옵션 1단계(낮음) 기준 기본 FPS
 
 gpu_list = ["RTX 3060", "RTX 4060", "RTX 4070"]
-gpu_rate = [1.0, 1.2, 1.7]  # 그래픽카드별 성능 배율
+gpu_rate = [1.0, 1.2, 1.7]  # 그래픽카드(GPU) 성능 배율
+
+cpu_list = ["i5-12400F", "i5-14600K", "Ryzen 7 7800X3D"]
+cpu_rate = [1.0, 1.15, 1.3]  # 프로세서(CPU) 게이밍 연산 배율
+
 option_names = ["낮음", "보통", "높음", "매우 높음", "울트라"]
 
 
 # =============================================
-# 함수 정의 (def): GPU와 옵션을 받아 예상 FPS와 적합도 메시지 리턴
+# 함수 정의 (def): GPU, CPU, 옵션을 받아 예상 FPS와 적합도 메시지 리턴
 # =============================================
-def predict_fps(gpu_name, option):
-    """GPU 이름과 그래픽 옵션을 매개변수로 받아 예상 FPS 리스트와 적합도에 따른 텍스트 메시지를 리턴"""
+def predict_fps(gpu_name, cpu_name, option):
+    """GPU 이름, CPU 이름, 그래픽 옵션을 매개변수로 받아 예상 FPS 리스트와 적합도 텍스트 메시지를 리턴"""
     gpu_power = gpu_rate[gpu_list.index(gpu_name)]
+    cpu_power = cpu_rate[cpu_list.index(cpu_name)]
     option_weight = 1 - 0.15 * (option - 1)  # 옵션 1단계 상승 시 프레임 15% 감소
 
     fps_list = []
     for base in base_fps:
-        fps_list.append(int(base * gpu_power * option_weight))
+        fps_list.append(int(base * gpu_power * cpu_power * option_weight))
 
     # 최저 프레임(fps) 기준 적합도 조건 판별 (120 / 60 프레임 기준)
     fps = min(fps_list)
     if fps >= 120:
         suitability = "적합"
-        message = f"[{suitability}] {gpu_name} 환경에서는 모든 게임이 120 FPS 이상으로 매우 적합합니다!"
+        message = f"[{suitability}] {cpu_name} + {gpu_name} 조합은 모든 게임에서 120 FPS 이상으로 매우 적합합니다!"
     elif fps >= 60:
         suitability = "보통"
-        message = f"[{suitability}] {gpu_name} 환경에서는 모든 게임이 60 FPS 이상으로 무난하게 플레이 가능합니다."
+        message = f"[{suitability}] {cpu_name} + {gpu_name} 조합은 모든 게임에서 60 FPS 이상으로 무난하게 플레이 가능합니다."
     else:
         suitability = "미달"
-        message = f"[{suitability}] {gpu_name} 환경에서는 일부 고사양 게임이 60 FPS 미만으로 그래픽 옵션 조정이 필요합니다."
+        message = f"[{suitability}] {cpu_name} + {gpu_name} 조합은 일부 고사양 게임이 60 FPS 미만으로 그래픽 옵션 조정이 필요합니다."
 
     return fps_list, message
 
 
 # =============================================
-# 3. 입력받기: 그래픽카드(selectbox) & 그래픽 옵션(slider)
+# 3. 입력받기: 그래픽카드(GPU), 프로세서(CPU), 그래픽 옵션
 # =============================================
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 with col1:
-    selected_gpu = st.selectbox("🖥️ 그래픽카드(GPU) 선택", gpu_list, index=1)
+    selected_gpu = st.selectbox("🖥️ 그래픽카드 (GPU)", gpu_list, index=1)
+    st.caption(f"GPU 배율: {gpu_rate[gpu_list.index(selected_gpu)]}x")
 with col2:
+    selected_cpu = st.selectbox("🧠 프로세서 (CPU)", cpu_list, index=1)
+    st.caption(f"CPU 배율: {cpu_rate[cpu_list.index(selected_cpu)]}x")
+with col3:
     selected_option = st.slider("⚙️ 그래픽 품질 옵션", 1, 5, 2)
-    st.caption(f"✨ 현재 선택 옵션: {option_names[selected_option - 1]} ({selected_option}단계)")
+    st.caption(f"선택 옵션: {option_names[selected_option - 1]} ({selected_option}단계)")
 
 # =============================================
 # 4. 버튼 클릭 시 함수 실행
 # =============================================
 if st.button("✨ 예상 FPS 및 적합도 분석하기", type="primary", use_container_width=True):
-    fps_list, message = predict_fps(selected_gpu, selected_option)
+    fps_list, message = predict_fps(selected_gpu, selected_cpu, selected_option)
 
     # =============================================
     # 5. 조건 판단 (if-elif-else): 게임별 FPS에 따른 적합도 판정
@@ -529,7 +541,7 @@ if st.button("✨ 예상 FPS 및 적합도 분석하기", type="primary", use_co
                 "예상 FPS",
                 format="%d FPS",
                 min_value=0,
-                max_value=450,
+                max_value=500,
             ),
             "적합도": st.column_config.TextColumn("적합도 (120 / 60 FPS 기준)"),
         },
@@ -549,8 +561,8 @@ if st.button("✨ 예상 FPS 및 적합도 분석하기", type="primary", use_co
         st.markdown(
             f"""
             - **적합도 기준**: `120 FPS 이상` **적합** / `60 FPS 이상` **보통** / `60 FPS 미만` **미달**
-            - **계산 공식**: `게임 기본 FPS × 그래픽카드 배율({gpu_rate[gpu_list.index(selected_gpu)]}배) × 옵션 가중치({int((1 - 0.15 * (selected_option - 1)) * 100)}%)`
+            - **계산 공식**: `게임 기본 FPS × GPU 배율({gpu_rate[gpu_list.index(selected_gpu)]}배) × CPU 배율({cpu_rate[cpu_list.index(selected_cpu)]}배) × 옵션 가중치({int((1 - 0.15 * (selected_option - 1)) * 100)}%)`
             """
         )
 else:
-    st.info("위에서 그래픽카드와 옵션을 선택한 뒤 **예상 FPS 및 적합도 분석하기** 버튼을 눌러 주세요!", icon="👆")
+    st.info("위에서 GPU, CPU, 그래픽 옵션을 선택한 뒤 **예상 FPS 및 적합도 분석하기** 버튼을 눌러 주세요!", icon="👆")
