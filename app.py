@@ -6,10 +6,10 @@ import streamlit as st
 import pandas as pd
 
 # =============================================
-# 1. 시작: 페이지 설정 및 하이엔드 UI / 애니메이션 스타일
+# 1. 시작: 페이지 설정 및 E-Sports Telemetry HUD 스타일
 # =============================================
 st.set_page_config(
-    page_title="FPS STUDIO // 내 PC 게임 프레임 예측기",
+    page_title="FPS TELEMETRY HUD // 내 PC 게임 프레임 예측기",
     page_icon="🎮",
     layout="centered",
 )
@@ -18,252 +18,270 @@ st.markdown(
     """
     <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&display=swap');
 
-    /* 1. 전체 배경 & 타이포그래피 (OpenAI / NVIDIA 다크 캔버스) */
+    /* 1. 다크 네이비 사이버 그리드 배경 */
     .stApp {
-        background: radial-gradient(circle at 50% -10%, #162214 0%, #090C10 45%, #040507 100%);
+        background-color: #070B19;
+        background-image:
+            radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.12) 0%, transparent 40%),
+            radial-gradient(circle at 85% 20%, rgba(139, 92, 246, 0.14) 0%, transparent 45%),
+            linear-gradient(rgba(0, 240, 255, 0.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(139, 92, 246, 0.035) 1px, transparent 1px);
+        background-size: 100% 100%, 100% 100%, 34px 34px, 34px 34px;
         color: #F8FAFC;
         font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    /* 기본 헤더/여백 정리 */
     header[data-testid="stHeader"] {
         background: transparent;
     }
     .block-container {
-        padding-top: 2.2rem;
+        padding-top: 2rem;
         padding-bottom: 3rem;
         max-width: 780px;
     }
 
-    /* 2. Apple 스타일 물리 곡선 키프레임 애니메이션 */
-    @keyframes appleEntrance {
+    /* 2. E-Sports HUD 키프레임 애니메이션 */
+    @keyframes scanlineFlow {
+        0% { top: -20%; opacity: 0; }
+        20% { opacity: 0.75; }
+        80% { opacity: 0.75; }
+        100% { top: 120%; opacity: 0; }
+    }
+
+    @keyframes hudLogWipe {
         0% {
             opacity: 0;
-            transform: translateY(24px) scale(0.97);
-            filter: blur(6px);
+            clip-path: inset(0 100% 0 0);
+            transform: translateX(-10px);
+        }
+        100% {
+            opacity: 1;
+            clip-path: inset(0 0 0 0);
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes hudPanelRise {
+        0% {
+            opacity: 0;
+            transform: translateY(22px) scale(0.98);
         }
         100% {
             opacity: 1;
             transform: translateY(0) scale(1);
-            filter: blur(0);
         }
     }
 
-    @keyframes lightSweep {
-        0% { transform: translateX(-150%) skewX(-25deg); }
-        50%, 100% { transform: translateX(250%) skewX(-25deg); }
+    @keyframes neonPulse {
+        0%, 100% {
+            box-shadow: 0 0 18px rgba(0, 240, 255, 0.28), inset 0 0 12px rgba(139, 92, 246, 0.2);
+        }
+        50% {
+            box-shadow: 0 0 28px rgba(139, 92, 246, 0.45), inset 0 0 16px rgba(0, 240, 255, 0.3);
+        }
     }
 
-    @keyframes pulseDot {
-        0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(118, 185, 0, 0.7); }
-        50% { transform: scale(1.25); opacity: 0.85; box-shadow: 0 0 0 8px rgba(118, 185, 0, 0); }
-    }
-
-    @keyframes borderGlow {
-        0%, 100% { border-color: rgba(118, 185, 0, 0.35); }
-        50% { border-color: rgba(163, 230, 53, 0.75); }
-    }
-
-    /* 3. 히어로 배너 (Apple Pro + NVIDIA 하이테크) */
-    .pro-hero {
+    /* 3. 상단 SF Telemetry HUD 배너 (각진 프레임 + 조준선 코너 + 스캔라인) */
+    .hud-banner {
         position: relative;
-        padding: 2.1rem 2.2rem;
-        border-radius: 24px;
-        margin-bottom: 1.8rem;
-        background: linear-gradient(145deg, rgba(20, 26, 34, 0.85) 0%, rgba(10, 13, 18, 0.95) 100%);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 24px 50px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        padding: 1.9rem 2.1rem;
+        margin-bottom: 1.7rem;
+        background: linear-gradient(135deg, rgba(11, 16, 33, 0.92) 0%, rgba(19, 26, 54, 0.88) 100%);
+        border: 1px solid rgba(0, 240, 255, 0.35);
+        clip-path: polygon(
+            0 16px, 16px 0,
+            calc(100% - 16px) 0, 100% 16px,
+            100% calc(100% - 16px), calc(100% - 16px) 100%,
+            16px 100%, 0 calc(100% - 16px)
+        );
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.65);
         overflow: hidden;
-        animation: appleEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        animation: hudPanelRise 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    /* 상단 네온 하이라이트 라인 */
-    .pro-hero::before {
+    /* 흐르는 스캔라인 */
+    .hud-banner::before {
         content: "";
         position: absolute;
-        top: 0;
-        left: 10%;
-        right: 10%;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, #76B900, #A3E635, transparent);
-    }
-
-    /* 유리 반사광 스윕 효과 */
-    .pro-hero::after {
-        content: "";
-        position: absolute;
-        top: 0;
         left: 0;
-        width: 45%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.045), transparent);
-        animation: lightSweep 6s ease-in-out infinite;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #00F0FF, #8B5CF6, transparent);
+        box-shadow: 0 0 12px #00F0FF;
+        animation: scanlineFlow 3.8s linear infinite;
         pointer-events: none;
     }
 
-    .status-pill {
+    /* 좌상단·우하단 네온 포인트 바 */
+    .hud-corner-tl {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 56px;
+        height: 3px;
+        background: #00F0FF;
+        box-shadow: 0 0 10px #00F0FF;
+    }
+    .hud-corner-br {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 56px;
+        height: 3px;
+        background: #8B5CF6;
+        box-shadow: 0 0 10px #8B5CF6;
+    }
+
+    .hud-tag {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 0.32rem 0.85rem;
-        border-radius: 999px;
-        font-family: 'JetBrains Mono', monospace;
+        font-family: 'Orbitron', sans-serif;
         font-size: 0.72rem;
         font-weight: 800;
-        letter-spacing: 0.08em;
-        color: #A3E635;
-        background: rgba(118, 185, 0, 0.14);
-        border: 1px solid rgba(118, 185, 0, 0.4);
-        margin-bottom: 0.9rem;
+        letter-spacing: 0.12em;
+        color: #00F0FF;
+        background: rgba(0, 240, 255, 0.1);
+        border: 1px solid rgba(0, 240, 255, 0.4);
+        padding: 0.28rem 0.8rem;
+        border-radius: 4px;
+        margin-bottom: 0.8rem;
     }
 
-    .status-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background-color: #8CE000;
-        animation: pulseDot 2s infinite;
-    }
-
-    .pro-hero h1 {
+    .hud-banner h1 {
         margin: 0;
-        font-size: 2.1rem;
-        font-weight: 800;
-        letter-spacing: -0.03em;
-        line-height: 1.2;
-        background: linear-gradient(180deg, #FFFFFF 0%, #CBD5E1 100%);
+        font-size: 1.95rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        color: #FFFFFF;
+        text-shadow: 0 0 20px rgba(0, 240, 255, 0.25);
+    }
+
+    .hud-banner h1 span {
+        background: linear-gradient(90deg, #00F0FF 0%, #A78BFA 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
 
-    .pro-hero h1 span {
-        background: linear-gradient(90deg, #76B900 0%, #BEF264 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    .pro-hero p {
-        margin: 0.65rem 0 0;
-        font-size: 0.98rem;
+    .hud-banner p {
+        margin: 0.55rem 0 0;
+        font-size: 0.95rem;
         color: #94A3B8;
-        font-weight: 400;
     }
 
-    /* 4. 입력 위젯 라벨 및 컨트롤 스타일링 */
+    /* 4. 하드웨어 입력 패널 (모서리 타겟 조준선 느낌) */
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+        background: rgba(11, 16, 33, 0.78);
+        border: 1px solid rgba(0, 240, 255, 0.22);
+        border-radius: 12px;
+        padding: 1rem 1.1rem 0.7rem;
+        box-shadow: inset 0 0 18px rgba(0, 240, 255, 0.04);
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:hover {
+        border-color: rgba(0, 240, 255, 0.55);
+        box-shadow: 0 0 18px rgba(0, 240, 255, 0.12);
+    }
+
     div[data-testid="stWidgetLabel"] p {
         color: #E2E8F0 !important;
-        font-weight: 600 !important;
+        font-weight: 700 !important;
         font-size: 0.95rem !important;
     }
     .stCaption {
-        color: #94A3B8 !important;
-    }
-    div[data-baseweb="select"] > div {
-        background-color: rgba(15, 23, 42, 0.85) !important;
-        border: 1px solid rgba(255, 255, 255, 0.14) !important;
-        border-radius: 14px !important;
-        color: #F8FAFC !important;
-        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    div[data-baseweb="select"] > div:hover {
-        border-color: #76B900 !important;
-        box-shadow: 0 0 0 3px rgba(118, 185, 0, 0.18) !important;
+        color: #38BDF8 !important;
+        font-weight: 600 !important;
     }
 
-    /* 5. 시그니처 실행 버튼 (NVIDIA Lime + Apple 스프링 인터랙션) */
+    /* 5. E-Sports 실행 트리거 버튼 */
     div.stButton > button[kind="primary"] {
-        position: relative;
-        overflow: hidden;
-        margin-top: 0.6rem;
-        background: linear-gradient(135deg, #76B900 0%, #95E000 100%) !important;
-        color: #050801 !important;
-        border: none !important;
-        border-radius: 14px !important;
+        margin-top: 0.8rem;
+        background: linear-gradient(90deg, #00D2FF 0%, #7C3AED 100%) !important;
+        color: #FFFFFF !important;
+        border: 1px solid rgba(255, 255, 255, 0.28) !important;
+        border-radius: 10px !important;
         padding: 0.78rem 1.4rem !important;
         font-weight: 800 !important;
         font-size: 1.05rem !important;
-        letter-spacing: -0.01em;
-        box-shadow: 0 8px 25px rgba(118, 185, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
-        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        letter-spacing: 0.02em;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+        animation: neonPulse 3s infinite;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
     }
     div.stButton > button[kind="primary"]:hover {
         transform: translateY(-3px) scale(1.01) !important;
-        box-shadow: 0 14px 34px rgba(118, 185, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+        filter: brightness(1.12);
+        box-shadow: 0 12px 30px rgba(0, 240, 255, 0.4) !important;
     }
     div.stButton > button[kind="primary"]:active {
-        transform: translateY(0) scale(0.98) !important;
+        transform: scale(0.98) !important;
     }
 
-    /* 6. 결과 화면 순차 등장 애니메이션 (1. 텍스트 메시지 -> 2. 테이블 -> 3. 강조 수치) */
-    /* [출력 1] 텍스트 메시지 카드 */
+    /* 6. 결과 구역 HUD 애니메이션 (1. 텍스트 메시지 -> 2. 테이블 -> 3. 강조 수치) */
+    /* [출력 1] 시스템 로그 스윕 메시지 */
     div[data-testid="stAlert"] {
-        border-radius: 16px !important;
-        backdrop-filter: blur(14px);
-        border: 1px solid rgba(255, 255, 255, 0.14) !important;
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
-        animation: appleEntrance 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        border-radius: 10px !important;
+        border-left: 4px solid #00F0FF !important;
+        background: rgba(15, 23, 42, 0.9) !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+        animation: hudLogWipe 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    /* [출력 2] 데이터프레임(테이블) 컨테이너 */
+    /* [출력 2] 게이지 테이블 컨테이너 */
     div[data-testid="stDataFrame"] {
-        border-radius: 18px !important;
+        border-radius: 12px !important;
         overflow: hidden !important;
-        border: 1px solid rgba(255, 255, 255, 0.12) !important;
-        box-shadow: 0 14px 35px rgba(0, 0, 0, 0.55) !important;
-        animation: appleEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.12s backwards;
+        border: 1px solid rgba(139, 92, 246, 0.45) !important;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 20px rgba(139, 92, 246, 0.15) !important;
+        animation: hudPanelRise 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.12s backwards;
     }
 
-    /* [출력 3] Apple Bento 스타일 강조 수치 (Metric) 카드 */
+    /* [출력 3] 3D 입체 호버 계기판 카드 (Metric) */
     div[data-testid="stMetric"] {
-        background: linear-gradient(160deg, rgba(22, 28, 38, 0.9) 0%, rgba(11, 15, 22, 0.96) 100%);
-        border: 1px solid rgba(118, 185, 0, 0.3);
-        border-radius: 20px;
-        padding: 1.15rem 1.3rem;
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-        animation: appleEntrance 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.24s backwards, borderGlow 4s infinite;
+        background: linear-gradient(155deg, rgba(15, 23, 42, 0.95) 0%, rgba(24, 20, 56, 0.92) 100%);
+        border: 1px solid rgba(0, 240, 255, 0.32);
+        border-radius: 14px;
+        padding: 1.05rem 1.15rem;
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.5);
+        transform-style: preserve-3d;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+        animation: hudPanelRise 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.24s backwards;
     }
     div[data-testid="stMetric"]:hover {
-        transform: translateY(-6px) scale(1.02);
-        border-color: #8CE000;
-        box-shadow: 0 20px 40px rgba(118, 185, 0, 0.22);
+        transform: perspective(700px) rotateX(6deg) rotateY(-4deg) translateY(-6px) scale(1.03);
+        border-color: #00F0FF;
+        box-shadow: 0 18px 36px rgba(0, 240, 255, 0.25), 0 0 18px rgba(139, 92, 246, 0.35);
     }
     div[data-testid="stMetricLabel"] p {
         color: #94A3B8 !important;
-        font-size: 0.85rem !important;
-        font-weight: 600 !important;
+        font-size: 0.84rem !important;
+        font-weight: 700 !important;
     }
     div[data-testid="stMetricValue"] {
-        font-family: 'JetBrains Mono', 'Pretendard', sans-serif !important;
+        font-family: 'Orbitron', 'Pretendard', sans-serif !important;
         font-weight: 800 !important;
-        font-size: 1.75rem !important;
-        color: #A3E635 !important;
-        letter-spacing: -0.02em;
-    }
-    div[data-testid="stMetricDelta"] {
-        font-weight: 600 !important;
+        font-size: 1.6rem !important;
+        background: linear-gradient(90deg, #00F0FF 0%, #C084FC 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
 
-    /* 서브헤더 스타일 */
     h3 {
-        color: #F1F5F9 !important;
-        font-weight: 700 !important;
-        letter-spacing: -0.02em !important;
+        color: #F8FAFC !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.01em !important;
         margin-top: 1.4rem !important;
     }
     </style>
 
-    <div class="pro-hero">
-        <div class="status-pill">
-            <span class="status-dot"></span>
-            FPS ENGINE READY // REAL-TIME BENCHMARK
-        </div>
-        <h1>내 PC 게임 <span>프레임(FPS)</span> 예측기</h1>
-        <p>그래픽카드와 그래픽 품질 옵션을 설정해 게임별 예상 프레임과 플레이 적합도를 정밀 분석합니다</p>
+    <div class="hud-banner">
+        <div class="hud-corner-tl"></div>
+        <div class="hud-corner-br"></div>
+        <div class="hud-tag">TELEMETRY HUD // SYSTEM BENCHMARK v3.0</div>
+        <h1>🎮 내 PC 게임 <span>프레임(FPS)</span> 예측기</h1>
+        <p>그래픽카드와 그래픽 품질 옵션을 설정해 게임별 예상 FPS와 플레이 적합도를 스캔합니다</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -296,13 +314,13 @@ def predict_fps(gpu_name, option):
     fps = min(fps_list)
     if fps >= 120:
         suitability = "적합"
-        message = f"[{suitability}] {gpu_name} 환경에서는 모든 게임이 120 FPS 이상으로 매우 쾌적하게 구동됩니다!"
+        message = f"[{suitability}] {gpu_name} 시스템은 모든 게임에서 120 FPS 이상을 달성하여 매우 적합합니다!"
     elif fps >= 60:
         suitability = "보통"
-        message = f"[{suitability}] {gpu_name} 환경에서는 모든 게임이 60 FPS 이상으로 무난하게 플레이 가능합니다."
+        message = f"[{suitability}] {gpu_name} 시스템은 모든 게임에서 60 FPS 이상으로 무난하게 플레이 가능합니다."
     else:
         suitability = "미달"
-        message = f"[{suitability}] {gpu_name} 환경에서는 일부 고사양 게임이 60 FPS 미만으로 옵션 조정이 필요합니다."
+        message = f"[{suitability}] {gpu_name} 시스템은 일부 고사양 게임이 60 FPS 미만으로 그래픽 옵션 조정이 필요합니다."
 
     return fps_list, message
 
@@ -315,12 +333,12 @@ with col1:
     selected_gpu = st.selectbox("🖥️ 그래픽카드(GPU) 선택", gpu_list, index=1)
 with col2:
     selected_option = st.slider("⚙️ 그래픽 품질 옵션", 1, 5, 2)
-    st.caption(f"현재 적용 옵션: **{option_names[selected_option - 1]} ({selected_option}단계)**")
+    st.caption(f"TARGET QUALITY : {option_names[selected_option - 1]} ({selected_option}단계)")
 
 # =============================================
 # 4. 버튼 클릭 시 함수 실행
 # =============================================
-if st.button("⚡ 프레임 및 적합도 분석 실행", type="primary", use_container_width=True):
+if st.button("⚡ TELEMETRY 스캔 및 적합도 분석 실행", type="primary", use_container_width=True):
     fps_list, message = predict_fps(selected_gpu, selected_option)
 
     # =============================================
@@ -397,4 +415,4 @@ if st.button("⚡ 프레임 및 적합도 분석 실행", type="primary", use_co
             """
         )
 else:
-    st.info("그래픽카드와 옵션을 선택한 뒤 **프레임 및 적합도 분석 실행** 버튼을 눌러 주세요.", icon="👆")
+    st.info("하드웨어와 그래픽 옵션을 설정한 뒤 **TELEMETRY 스캔 및 적합도 분석 실행** 버튼을 눌러 주세요.", icon="👆")
